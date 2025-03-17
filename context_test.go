@@ -38,7 +38,7 @@ func TestZerologChildContext(t *testing.T) {
 	logger := zerolog.New(&buf)
 
 	parentContext := logger.With().Str("parent", "parent")
-	childContext := parentContext.Str("child", "child")
+	childContext := parentContext.Logger().With().Str("child", "child")
 
 	parentLogger := parentContext.Logger()
 	childLogger := childContext.Logger()
@@ -83,8 +83,8 @@ func TestZerologChildrenContexts(t *testing.T) {
 	logger := zerolog.New(&buf)
 
 	parentContext := logger.With().Str("parent", "parent")
-	child1Context := parentContext.Str("child_1", "child_1")
-	child2Context := parentContext.Str("child_2", "child_2")
+	child1Context := parentContext.Logger().With().Str("child_1", "child_1")
+	child2Context := parentContext.Logger().With().Str("child_2", "child_2")
 
 	parentLogger := parentContext.Logger()
 	child1Logger := child1Context.Logger()
