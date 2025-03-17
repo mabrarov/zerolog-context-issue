@@ -12,13 +12,13 @@ func TestZerologChildContext(t *testing.T) {
 	var buf bytes.Buffer
 	logger := zerolog.New(&buf)
 
-	parentContext := logger.With().Bool("parent", true)
-	childContext := parentContext.Bool("child", true)
+	parentContext := logger.With().Str("parent", "parent")
+	childContext := parentContext.Str("child", "child")
 
 	parentLogger := parentContext.Logger()
 	childLogger := childContext.Logger()
 
-	parentLogger.Info().Bool("parent_key", true).Msg("parent")
+	parentLogger.Info().Str("parent_key", "parent_key").Msg("parent")
 	childLogger.Info().Msg("child")
 
 	parentLoggerOutput, err := buf.ReadString('\n')
@@ -30,34 +30,32 @@ func TestZerologChildContext(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// parentLoggerOutput: {"level":"info","parent":true,"parent_key":true,"message":"parent"}
+	// parentLoggerOutput: {"level":"info","parent":"parent","parent_key":"parent_key","message":"parent"}
 	assertEqual(t, &struct {
-		Level     string `json:"level"`
-		Parent    bool   `json:"parent"`
-		ParentKey bool   `json:"parent_key"`
-		Child     bool   `json:"child"`
-		Message   string `json:"message"`
+		Level     string           `json:"level"`
+		Parent    optional[string] `json:"parent"`
+		ParentKey optional[string] `json:"parent_key"`
+		Child     optional[string] `json:"child"`
+		Message   string           `json:"message"`
 	}{
 		Level:     "info",
-		Parent:    true,
-		ParentKey: true,
-		Child:     false,
+		Parent:    optional[string]{"parent", true},
+		ParentKey: optional[string]{"parent_key", true},
 		Message:   "parent",
 	}, parentLoggerOutput)
 
-	// childLoggerOutput: {"level":"info","parent":true,"child":true,"message":"child"}
+	// childLoggerOutput: {"level":"info","parent":"parent","child":"child","message":"child"}
 	assertEqual(t, &struct {
-		Level     string `json:"level"`
-		Parent    bool   `json:"parent"`
-		ParentKey bool   `json:"parent_key"`
-		Child     bool   `json:"child"`
-		Message   string `json:"message"`
+		Level     string           `json:"level"`
+		Parent    optional[string] `json:"parent"`
+		ParentKey optional[string] `json:"parent_key"`
+		Child     optional[string] `json:"child"`
+		Message   string           `json:"message"`
 	}{
-		Level:     "info",
-		Parent:    true,
-		ParentKey: false,
-		Child:     true,
-		Message:   "child",
+		Level:   "info",
+		Parent:  optional[string]{"parent", true},
+		Child:   optional[string]{"child", true},
+		Message: "child",
 	}, childLoggerOutput)
 }
 
@@ -65,9 +63,9 @@ func TestZerologChildrenContexts(t *testing.T) {
 	var buf bytes.Buffer
 	logger := zerolog.New(&buf)
 
-	parentContext := logger.With().Bool("parent", true)
-	child1Context := parentContext.Bool("child_1", true)
-	child2Context := parentContext.Bool("child_2", true)
+	parentContext := logger.With().Str("parent", "parent")
+	child1Context := parentContext.Str("child_1", "child_1")
+	child2Context := parentContext.Str("child_2", "child_2")
 
 	parentLogger := parentContext.Logger()
 	child1Logger := child1Context.Logger()
@@ -90,53 +88,67 @@ func TestZerologChildrenContexts(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// parentLoggerOutput: {"level":"info","parent":true,"message":"parent"}
+	// parentLoggerOutput: {"level":"info","parent":"parent","message":"parent"}
 	assertEqual(t, &struct {
-		Level   string `json:"level"`
-		Parent  bool   `json:"parent"`
-		Child1  bool   `json:"child_1"`
-		Child2  bool   `json:"child_2"`
-		Message string `json:"message"`
+		Level   string           `json:"level"`
+		Parent  optional[string] `json:"parent"`
+		Child1  optional[string] `json:"child_1"`
+		Child2  optional[string] `json:"child_2"`
+		Message string           `json:"message"`
 	}{
 		Level:   "info",
-		Parent:  true,
+		Parent:  optional[string]{"parent", true},
 		Message: "parent",
 	}, parentLoggerOutput)
 
-	// child1LoggerOutput: {"level":"info","parent":true,"child_1":true,"message":"child_1"}
+	// child1LoggerOutput: {"level":"info","parent":"parent","child_1":"child_1","message":"child_1"}
 	assertEqual(t, &struct {
-		Level   string `json:"level"`
-		Parent  bool   `json:"parent"`
-		Child1  bool   `json:"child_1"`
-		Child2  bool   `json:"child_2"`
-		Message string `json:"message"`
+		Level   string           `json:"level"`
+		Parent  optional[string] `json:"parent"`
+		Child1  optional[string] `json:"child_1"`
+		Child2  optional[string] `json:"child_2"`
+		Message string           `json:"message"`
 	}{
 		Level:   "info",
-		Parent:  true,
-		Child1:  true,
+		Parent:  optional[string]{"parent", true},
+		Child1:  optional[string]{"child_1", true},
 		Message: "child_1",
 	}, child1LoggerOutput)
 
-	// child2LoggerOutput: {"level":"info","parent":true,"child_2":true,"message":"child_2"}
+	// child2LoggerOutput: {"level":"info","parent":"parent","child_2":"child_2","message":"child_2"}
 	assertEqual(t, &struct {
-		Level   string `json:"level"`
-		Parent  bool   `json:"parent"`
-		Child1  bool   `json:"child_1"`
-		Child2  bool   `json:"child_2"`
-		Message string `json:"message"`
+		Level   string           `json:"level"`
+		Parent  optional[string] `json:"parent"`
+		Child1  optional[string] `json:"child_1"`
+		Child2  optional[string] `json:"child_2"`
+		Message string           `json:"message"`
 	}{
 		Level:   "info",
-		Parent:  true,
-		Child2:  true,
+		Parent:  optional[string]{"parent", true},
+		Child2:  optional[string]{"child_2", true},
 		Message: "child_2",
 	}, child2LoggerOutput)
+}
+
+type optional[T any] struct {
+	value    T
+	hasValue bool
+}
+
+func (m *optional[T]) UnmarshalJSON(b []byte) error {
+	if err := json.Unmarshal(b, &m.value); err != nil {
+		return err
+	}
+	m.hasValue = true
+	return nil
 }
 
 func assertEqual[T comparable](t *testing.T, expected *T, actual string) {
 	var v T
 	err := json.Unmarshal([]byte(actual), &v)
 	if err != nil {
-		t.Fatal(err)
+		t.Error(err)
+		return
 	}
 	if v != *expected {
 		t.Errorf("expected: %+v, actual: %+v", expected, &v)
