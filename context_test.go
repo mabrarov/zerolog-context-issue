@@ -97,9 +97,302 @@ func TestZerologChildrenContexts(t *testing.T) {
 	assertLines(t, expected, buf)
 }
 
+func TestMarshallOptionalChild(t *testing.T) {
+	data := struct {
+		Id      optional[int]    `json:"id"`
+		Name    optional[string] `json:"name"`
+		Enabled optional[bool]   `json:"enabled"`
+		Child   optional[struct {
+			Id      optional[int]    `json:"id"`
+			Name    optional[string] `json:"name"`
+			Enabled optional[bool]   `json:"enabled"`
+		}] `json:"child"`
+	}{
+		Id:      optional[int]{value: 1, hasValue: true},
+		Name:    optional[string]{value: "Parent name", hasValue: true},
+		Enabled: optional[bool]{value: true, hasValue: true},
+	}
+	b, err := json.Marshal(data)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(string(b))
+}
+
+func TestMarshallOptionalNum(t *testing.T) {
+	data := struct {
+		Id      optional[int]    `json:"id"`
+		Name    optional[string] `json:"name"`
+		Enabled optional[bool]   `json:"enabled"`
+		Child   optional[struct {
+			Id      optional[int]    `json:"id"`
+			Name    optional[string] `json:"name"`
+			Enabled optional[bool]   `json:"enabled"`
+		}] `json:"child"`
+	}{
+		Name:    optional[string]{value: "Parent name", hasValue: true},
+		Enabled: optional[bool]{value: true, hasValue: true},
+		Child: optional[struct {
+			Id      optional[int]    `json:"id"`
+			Name    optional[string] `json:"name"`
+			Enabled optional[bool]   `json:"enabled"`
+		}]{
+			value: struct {
+				Id      optional[int]    `json:"id"`
+				Name    optional[string] `json:"name"`
+				Enabled optional[bool]   `json:"enabled"`
+			}{
+				Id:      optional[int]{value: 2, hasValue: true},
+				Name:    optional[string]{value: "Child name", hasValue: true},
+				Enabled: optional[bool]{value: true, hasValue: true},
+			},
+			hasValue: true,
+		},
+	}
+	b, err := json.Marshal(data)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(string(b))
+}
+
+func TestMarshallOptionalString(t *testing.T) {
+	data := struct {
+		Id      optional[int]    `json:"id"`
+		Name    optional[string] `json:"name"`
+		Enabled optional[bool]   `json:"enabled"`
+		Child   optional[struct {
+			Id      optional[int]    `json:"id"`
+			Name    optional[string] `json:"name"`
+			Enabled optional[bool]   `json:"enabled"`
+		}] `json:"child"`
+	}{
+		Id:      optional[int]{value: 42, hasValue: true},
+		Enabled: optional[bool]{value: true, hasValue: true},
+		Child: optional[struct {
+			Id      optional[int]    `json:"id"`
+			Name    optional[string] `json:"name"`
+			Enabled optional[bool]   `json:"enabled"`
+		}]{
+			value: struct {
+				Id      optional[int]    `json:"id"`
+				Name    optional[string] `json:"name"`
+				Enabled optional[bool]   `json:"enabled"`
+			}{
+				Id:      optional[int]{value: 2, hasValue: true},
+				Name:    optional[string]{value: "Child name", hasValue: true},
+				Enabled: optional[bool]{value: true, hasValue: true},
+			},
+			hasValue: true,
+		},
+	}
+	b, err := json.Marshal(data)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(string(b))
+}
+
+func TestMarshallOptionalBoolean(t *testing.T) {
+	data := struct {
+		Id      optional[int]    `json:"id"`
+		Name    optional[string] `json:"name"`
+		Enabled optional[bool]   `json:"enabled"`
+		Child   optional[struct {
+			Id      optional[int]    `json:"id"`
+			Name    optional[string] `json:"name"`
+			Enabled optional[bool]   `json:"enabled"`
+		}] `json:"child"`
+	}{
+		Id:   optional[int]{value: 42, hasValue: true},
+		Name: optional[string]{value: "Parent name", hasValue: true},
+		Child: optional[struct {
+			Id      optional[int]    `json:"id"`
+			Name    optional[string] `json:"name"`
+			Enabled optional[bool]   `json:"enabled"`
+		}]{
+			value: struct {
+				Id      optional[int]    `json:"id"`
+				Name    optional[string] `json:"name"`
+				Enabled optional[bool]   `json:"enabled"`
+			}{
+				Id:   optional[int]{value: 2, hasValue: true},
+				Name: optional[string]{value: "Child name", hasValue: true},
+			},
+			hasValue: true,
+		},
+	}
+	b, err := json.Marshal(data)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(string(b))
+}
+
+func TestMarshallOptionalNumWithOmit(t *testing.T) {
+	data := struct {
+		Id      *optional[int]    `json:"id,omitempty"`
+		Name    *optional[string] `json:"name,omitempty"`
+		Enabled *optional[bool]   `json:"enabled,omitempty"`
+	}{
+		Id:      nil,
+		Name:    &optional[string]{value: "Name", hasValue: true},
+		Enabled: &optional[bool]{value: false, hasValue: true},
+	}
+	b, err := json.Marshal(data)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(string(b))
+}
+
+func TestMarshallNullNumWithOmit(t *testing.T) {
+	data := struct {
+		Id      *optional[int]    `json:"id,omitempty"`
+		Name    *optional[string] `json:"name,omitempty"`
+		Enabled *optional[bool]   `json:"enabled,omitempty"`
+	}{
+		Id:      &optional[int]{},
+		Name:    &optional[string]{value: "Name", hasValue: true},
+		Enabled: &optional[bool]{value: false, hasValue: true},
+	}
+	b, err := json.Marshal(data)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(string(b))
+}
+
+func TestMarshallZeroNumWithOmit(t *testing.T) {
+	data := struct {
+		Id      *optional[int]    `json:"id,omitempty"`
+		Name    *optional[string] `json:"name,omitempty"`
+		Enabled *optional[bool]   `json:"enabled,omitempty"`
+	}{
+		Id:      &optional[int]{value: 0, hasValue: true},
+		Name:    &optional[string]{value: "Name", hasValue: true},
+		Enabled: &optional[bool]{value: false, hasValue: true},
+	}
+	b, err := json.Marshal(data)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(string(b))
+}
+
+func TestMarshallOptionalStringWithOmit(t *testing.T) {
+	data := struct {
+		Id      *optional[int]    `json:"id,omitempty"`
+		Name    *optional[string] `json:"name,omitempty"`
+		Enabled *optional[bool]   `json:"enabled,omitempty"`
+	}{
+		Id:      &optional[int]{value: 1, hasValue: true},
+		Name:    nil,
+		Enabled: &optional[bool]{value: true, hasValue: true},
+	}
+	b, err := json.Marshal(data)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(string(b))
+}
+
+func TestMarshallNullStringWithOmit(t *testing.T) {
+	data := struct {
+		Id      *optional[int]    `json:"id,omitempty"`
+		Name    *optional[string] `json:"name,omitempty"`
+		Enabled *optional[bool]   `json:"enabled,omitempty"`
+	}{
+		Id:      &optional[int]{value: 1, hasValue: true},
+		Name:    &optional[string]{},
+		Enabled: &optional[bool]{value: true, hasValue: true},
+	}
+	b, err := json.Marshal(data)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(string(b))
+}
+
+func TestMarshallEmptyStringWithOmit(t *testing.T) {
+	data := struct {
+		Id      *optional[int]    `json:"id,omitempty"`
+		Name    *optional[string] `json:"name,omitempty"`
+		Enabled *optional[bool]   `json:"enabled,omitempty"`
+	}{
+		Id:      &optional[int]{value: 1, hasValue: true},
+		Name:    &optional[string]{hasValue: true},
+		Enabled: &optional[bool]{value: true, hasValue: true},
+	}
+	b, err := json.Marshal(data)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(string(b))
+}
+
+func TestMarshallOptionalBooleanWithOmit(t *testing.T) {
+	data := struct {
+		Id      *optional[int]    `json:"id,omitempty"`
+		Name    *optional[string] `json:"name,omitempty"`
+		Enabled *optional[bool]   `json:"enabled,omitempty"`
+	}{
+		Id:      &optional[int]{value: 1, hasValue: true},
+		Name:    &optional[string]{value: "Name", hasValue: true},
+		Enabled: nil,
+	}
+	b, err := json.Marshal(data)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(string(b))
+}
+
+func TestMarshallNullBooleanWithOmit(t *testing.T) {
+	data := struct {
+		Id      *optional[int]    `json:"id,omitempty"`
+		Name    *optional[string] `json:"name,omitempty"`
+		Enabled *optional[bool]   `json:"enabled,omitempty"`
+	}{
+		Id:      &optional[int]{value: 1, hasValue: true},
+		Name:    &optional[string]{value: "Name", hasValue: true},
+		Enabled: &optional[bool]{},
+	}
+	b, err := json.Marshal(data)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(string(b))
+}
+
+func TestMarshallFalseBooleanWithOmit(t *testing.T) {
+	data := struct {
+		Id      *optional[int]    `json:"id,omitempty"`
+		Name    *optional[string] `json:"name,omitempty"`
+		Enabled *optional[bool]   `json:"enabled,omitempty"`
+	}{
+		Id:      &optional[int]{value: 1, hasValue: true},
+		Name:    &optional[string]{value: "Name", hasValue: true},
+		Enabled: &optional[bool]{hasValue: true},
+	}
+	b, err := json.Marshal(data)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(string(b))
+}
+
 type optional[T any] struct {
 	value    T
 	hasValue bool
+}
+
+//goland:noinspection GoMixedReceiverTypes
+func (m optional[T]) MarshalJSON() ([]byte, error) {
+	if m.hasValue {
+		return json.Marshal(&m.value)
+	}
+	return json.Marshal(nil)
 }
 
 func (m *optional[T]) UnmarshalJSON(b []byte) error {
